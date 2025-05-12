@@ -1,0 +1,283 @@
+{
+  "name": "youtube trend detector dailt digest",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -160
+      ],
+      "id": "bdd33adb-dc9d-4cfb-8f03-53dbabd8a9a1",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1XEszuKbyMtdqTu5x_WjDKjpWtTUhz9RJzkf1AW36Caw",
+          "mode": "list",
+          "cachedResultName": "youtube trend detector",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XEszuKbyMtdqTu5x_WjDKjpWtTUhz9RJzkf1AW36Caw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "channel",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XEszuKbyMtdqTu5x_WjDKjpWtTUhz9RJzkf1AW36Caw/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        160,
+        -80
+      ],
+      "id": "a3d663e5-c081-47fc-a51f-d7280293c94a",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xJkaDxg0LUPLRNzL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1XEszuKbyMtdqTu5x_WjDKjpWtTUhz9RJzkf1AW36Caw",
+          "mode": "list",
+          "cachedResultName": "youtube trend detector",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XEszuKbyMtdqTu5x_WjDKjpWtTUhz9RJzkf1AW36Caw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.channel_id }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        880,
+        0
+      ],
+      "id": "a231cda5-c1fa-4233-a1a5-fc3efd47fc3b",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xJkaDxg0LUPLRNzL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        420,
+        -80
+      ],
+      "id": "83da054e-55e0-42f8-82e8-d3c0e660dec4",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fff17ca4-28a6-4670-8839-57d496f3eb58",
+              "leftValue": "={{ $json.views }}",
+              "rightValue": "={{\n$('Google Sheets1').all().reduce((sum,item)=>sum+Number(item.json.views || 0),0)\n/\n$('Google Sheets1').all().length\n}}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "6aa1ec48-38b8-4483-901c-042bcd382185",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "sendTo": "ramanjanmanchikatla@gmail.com",
+        "subject": "You Tube trend daily Digest",
+        "message": "={{ $json.htmlBody }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        -180
+      ],
+      "id": "f206d947-477a-4a99-b474-ff09443d15d7",
+      "name": "Gmail",
+      "webhookId": "149c9553-5939-45e8-8dc0-9059e452b273",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LDxozASFtRyBNs1s",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -180
+      ],
+      "id": "d2c2d9a5-143a-4c8b-ac63-4417f03c642d",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $json.data;\n\nlet html = `\n<!DOCTYPE html>\n<html>\n  <body style=\"font-family: Arial, sans-serif; background-color: #ffffff; color: #333; padding: 20px;\">\n    <h2 style=\"text-align: center; color: #222;\">🔥 YouTube Trend Alert - ${new Date().toLocaleString()}</h2>\n`;\n\nfor (const item of items) {\n  html += `\n    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 30px; border-bottom: 1px solid #ddd;\">\n      <tr>\n        <td style=\"padding: 10px;\">\n          <img src=\"${item.large_tumb}\" alt=\"Thumbnail\" style=\"width: 100%; max-width: 300px; border-radius: 8px;\" />\n        </td>\n        <td style=\"padding: 10px; vertical-align: top;\">\n          <p style=\"margin: 4px 0;\"><strong>📺 Channel:</strong> ${item.channel_title}</p>\n          <p style=\"margin: 4px 0;\"><strong>📺 video Title:</strong> ${item.title}</p>\n          <p style=\"margin: 4px 0;\"><strong>⏱️ Duration:</strong> ${item.duration}</p>\n          <p style=\"margin: 4px 0;\"><strong>👁️ Views:</strong> ${item.views}</p>\n        </td>\n      </tr>\n    </table>\n  `;\n}\n\nhtml += `<p style=\"text-align: center; font-size: 14px; color: #777; margin-top: 20px;\">Sent automatically via n8n</p></body></html>`;\n\nreturn [{ json: { htmlBody: html } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        -180
+      ],
+      "id": "815c7aca-12bc-4ca8-9c88-27530136de97",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7d172360-0a0a-4432-b53b-0b65c4ef2b29",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "742b688c7904cdb914a69abcb0249fee1e0f10a2de0703d6fe1c4de35ef3f4a6"
+  },
+  "id": "F6B5SXVPdwgRQitK",
+  "tags": [
+    {
+      "createdAt": "2025-05-12T07:01:24.349Z",
+      "updatedAt": "2025-05-12T07:01:24.349Z",
+      "id": "SWInBQeR67ZdKFDP",
+      "name": "n8h course"
+    }
+  ]
+}
